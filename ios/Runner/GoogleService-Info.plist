@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>964036822380-tt5hpgsqe8gb9ava694m7lqc1t0d3k5o.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.964036822380-tt5hpgsqe8gb9ava694m7lqc1t0d3k5o</string>
+	<key>API_KEY</key>
+	<string>AIzaSyDPp8eHc7SHTgy8ezS9vM6FdLZuWa__9OQ</string>
+	<key>GCM_SENDER_ID</key>
+	<string>964036822380</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.naikitakashima.readingHabitFormationApp</string>
+	<key>PROJECT_ID</key>
+	<string>reading-habit-formation-app</string>
+	<key>STORAGE_BUCKET</key>
+	<string>reading-habit-formation-app.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:964036822380:ios:4df3d05c738e59d670df49</string>
+	<key>DATABASE_URL</key>
+	<string>https://reading-habit-formation-app.firebaseio.com</string>
+</dict>
+</plist>
