@@ -1,19 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:reading_habit_formation_app/Input/input_page.dart';
 import 'package:reading_habit_formation_app/Login/login_page.dart';
 import 'package:reading_habit_formation_app/Main/main_model.dart';
-import 'package:reading_habit_formation_app/Output/output_page.dart';
-import 'package:reading_habit_formation_app/Survey/survey_page.dart';
+import 'package:reading_habit_formation_app/Output/output_model.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 // ignore: must_be_immutable
 class MainPage extends StatelessWidget {
-  final List<Widget> _pageList = [
-    InputPage(),
-    OutputPage(),
-    SurveyPage(),
-  ];
   User userData;
   String name = '';
   String email;
@@ -35,10 +30,7 @@ class MainPage extends StatelessWidget {
         create: (_) => MainModel(),
         child: Scaffold(
           appBar: AppBar(
-            // leading: Icon(Icons.menu),
-            title: Consumer<MainModel>(builder: (context, model, child) {
-              return Text(model.appBarTitle);
-            }),
+            title: Text('短時間読書習慣'),
           ),
           drawer: Consumer<MainModel>(builder: (context, model, child) {
             return Drawer(
@@ -67,47 +59,231 @@ class MainPage extends StatelessWidget {
               ]),
             );
           }),
-          bottomNavigationBar: Consumer<MainModel>(
+          body: MyHomePage(email: email),
+        ),
+      ),
+    );
+  }
+}
+
+class MyHomePage extends StatefulWidget {
+  MyHomePage({Key key, this.email}) : super(key: key);
+
+  final String email;
+
+  @override
+  _MyHomePageState createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
+  AnimationController _animationController;
+  CalendarController _calendarController;
+  String email;
+
+  // Map<DateTime, List> _events; //todo 後でどうにかする
+  // static final _dateFormatter = DateFormat("y/M/d HH:mm"); //todo 使ってないよ
+  @override
+  void initState() {
+    super.initState();
+    print(DateTime.now());
+    print(widget.email);
+    email = widget.email;
+    _calendarController = CalendarController();
+
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    _calendarController.dispose();
+    super.dispose();
+  }
+
+  // void _onDaySelected(DateTime day, List events, List holidays) {
+  //   print('CALLBACK: 日付変わりました');
+  //   setState(() {});
+  // } //todo 日付選択時に機能するよ
+  //
+  // void _onVisibleDaysChanged(
+  //     DateTime first, DateTime last, CalendarFormat format) {
+  //   print('CALLBACK: 表示するページが変わりました');
+  // } //todo 月が変わっと時に機能するよ
+  //
+  // void _onCalendarCreated(
+  //     DateTime first, DateTime last, CalendarFormat format) {
+  //   print('CALLBACK: カレンダー作成しました');
+  // } //todo カレンダー作成時に機能するよ
+  //
+  // void _onDayLongPressed(DateTime day, List events, List holidays) {
+  //   print('長押しされました');
+  // }
+  //
+  // void reload(DateTime day, List events, List holidays) {
+  //   print('更新しました');
+  // }
+
+  @override
+  Widget build(BuildContext context) {
+    Map<DateTime, List> events = {};
+    return ChangeNotifierProvider<OutputModel>(
+      create: (_) => OutputModel()..fetchEvents(),
+      child: Column(
+        mainAxisSize: MainAxisSize.max,
+        children: <Widget>[
+          Consumer<OutputModel>(builder: (context, model, child) {
+            events = {};
+            events.addAll(model.eventList);
+            model.userEmail = email;
+            print(events);
+            print(events.length);
+            return TableCalendar(
+              events: events,
+              headerVisible: true,
+              // todo header表示するかどうか
+              calendarController: _calendarController,
+              startingDayOfWeek: StartingDayOfWeek.sunday,
+              //todo 月曜日からスタートする
+              calendarStyle: CalendarStyle(
+                selectedColor: Colors.red[600],
+                todayColor: Colors.red[300],
+                outsideDaysVisible: false,
+              ),
+              headerStyle: HeaderStyle(
+                centerHeaderTitle: true,
+                formatButtonVisible: false, //todo 右側にあったボタンの有無
+                formatButtonTextStyle:
+                    TextStyle().copyWith(color: Colors.white, fontSize: 15.0),
+                formatButtonDecoration: BoxDecoration(
+                  color: Colors.deepOrange[400],
+                  borderRadius: BorderRadius.circular(16.0),
+                ),
+              ),
+              builders: CalendarBuilders(
+                markersBuilder: (context, date, events, holidays) {
+                  final children = <Widget>[];
+
+                  if (events.isNotEmpty) {
+                    children.add(
+                      Positioned(
+                        right: 1,
+                        bottom: 1,
+                        child: _buildEventsMarker(date, events),
+                      ),
+                    );
+                  }
+
+                  return children;
+                },
+              ),
+              // onDaySelected: _onDaySelected, //todo 日付チェンジ
+              // onVisibleDaysChanged: _onVisibleDaysChanged, //todo 月チェンジor表示範囲変更
+              // onCalendarCreated: _onCalendarCreated, //todo カレンダー起動
+              // onDayLongPressed: _onDayLongPressed,
+            );
+          }),
+          SizedBox(height: 16.0),
+          Center(
+            child: Consumer<OutputModel>(builder: (context, model, child) {
+              return Text('習慣達成日数：' + model.eventList.length.toString());
+            }),
+          ),
+          SizedBox(height: 16.0),
+          Center(
+            child: Text('↓習慣達成ボタン↓'),
+          ),
+          SizedBox(height: 16.0),
+          Consumer<OutputModel>(
             builder: (context, model, child) {
-              return BottomNavigationBar(
-                items: const <BottomNavigationBarItem>[
-                  BottomNavigationBarItem(
-                    title: Text('読書記録'),
-                    icon: Icon(Icons.book),
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.data_usage),
-                    title: Text('カレンダー'),
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.school),
-                    title: Text('アンケート'),
-                  ),
-                ],
-                unselectedItemColor: Colors.grey,
-                selectedItemColor: Colors.redAccent,
-                currentIndex: model.selectedIndex,
-                onTap: (int index) {
-                  model.selectedIndex = index;
-                  if (index == 0) {
-                    model.appBarTitle = '習慣実行画面';
-                  }
-                  if (index == 1) {
-                    model.appBarTitle = '習慣達成確認画面';
-                  }
-                  if (index == 2) {
-                    model.appBarTitle = 'アンケート';
+              return FloatingActionButton(
+                onPressed: () async {
+                  DateTime now = DateTime.now();
+                  DateTime yearToDay = DateTime(now.year, now.month, now.day);
+                  if (events.containsKey(yearToDay)) {
+                    await existEvent(context);
+                  } else {
+                    await addEvent(model, context);
+                    await model.fetchEvents();
                   }
                 },
+                child: Icon(Icons.book),
               );
             },
           ),
-          body: Consumer<MainModel>(builder: (context, model, child) {
-            return IndexedStack(
-              index: model.selectedIndex,
-              children: _pageList,
-            );
-          }),
+          SizedBox(height: 16.0),
+          Center(
+            child: Text('↓習慣実績削除ボタン↓'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future addEvent(OutputModel model, BuildContext context) async {
+    await model.addEventToFirebase();
+
+    await showDialog<void>(
+      context: context, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('読書習慣達成です！'),
+          actions: <Widget>[
+            FlatButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future existEvent(BuildContext context) async {
+    await showDialog<void>(
+      context: context, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('本日は既に習慣達成済です！'),
+          actions: <Widget>[
+            FlatButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildEventsMarker(DateTime date, List events) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      decoration: BoxDecoration(
+        shape: BoxShape.rectangle,
+        color: _calendarController.isSelected(date)
+            ? Colors.green[500]
+            : _calendarController.isToday(date)
+                ? Colors.green[300]
+                : Colors.blue[500],
+      ),
+      width: 16.0,
+      height: 16.0,
+      child: Center(
+        child: Text(
+          '読',
+          style: TextStyle().copyWith(
+            color: Colors.white,
+            fontSize: 12.0,
+          ),
         ),
       ),
     );

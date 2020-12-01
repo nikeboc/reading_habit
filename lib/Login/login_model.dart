@@ -7,7 +7,7 @@ class LoginModel extends ChangeNotifier {
     scopes: [
       'email',
       'https://www.googleapis.com/auth/contacts.readonly',
-    ],
+    ], // todo googleの使いたい機能を許可させる権限
   );
   // final GoogleSignIn _googleSignIn = GoogleSignIn();
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -15,12 +15,11 @@ class LoginModel extends ChangeNotifier {
   Future<User> handleSignIn() async {
     GoogleSignInAccount googleCurrentUser = _googleSignIn.currentUser;
     try {
-      // if (googleCurrentUser == null)
-      //   googleCurrentUser = await _googleSignIn.signInSilently();
+      if (googleCurrentUser == null)
+        googleCurrentUser = await _googleSignIn.signInSilently();
       if (googleCurrentUser == null)
         googleCurrentUser = await _googleSignIn.signIn();
       if (googleCurrentUser == null) return null;
-
       GoogleSignInAuthentication googleAuth =
           await googleCurrentUser.authentication;
       final AuthCredential credential = GoogleAuthProvider.credential(
