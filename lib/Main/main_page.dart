@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:reading_habit_formation_app/Login/login_page.dart';
 import 'package:reading_habit_formation_app/Main/main_model.dart';
 import 'package:reading_habit_formation_app/Output/output_model.dart';
+import 'package:reading_habit_formation_app/User/user_data.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 // ignore: must_be_immutable
@@ -79,14 +80,12 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   AnimationController _animationController;
   CalendarController _calendarController;
   String email;
+  Map<DateTime, List> events = {};
 
-  // Map<DateTime, List> _events; //todo 後でどうにかする
-  // static final _dateFormatter = DateFormat("y/M/d HH:mm"); //todo 使ってないよ
   @override
   void initState() {
     super.initState();
-    print(DateTime.now());
-    print(widget.email);
+    print('userEmail:${widget.email}');
     email = widget.email;
     _calendarController = CalendarController();
 
@@ -130,7 +129,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    Map<DateTime, List> events = {};
     return ChangeNotifierProvider<OutputModel>(
       create: (_) => OutputModel()..fetchEvents(),
       child: Column(
@@ -140,8 +138,10 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             events = {};
             events.addAll(model.eventList);
             model.userEmail = email;
+
             print(events);
-            print(events.length);
+            print('currentUserEvents${events.length}');
+
             return TableCalendar(
               events: events,
               headerVisible: true,
@@ -190,17 +190,13 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           SizedBox(height: 16.0),
           Center(
             child: Consumer<OutputModel>(builder: (context, model, child) {
-              return Text('習慣達成日数：' + model.eventList.length.toString());
+              return Text('習慣達成日数：' + events.length.toString());
             }),
-          ),
-          SizedBox(height: 16.0),
-          Center(
-            child: Text('↓習慣達成ボタン↓'),
           ),
           SizedBox(height: 16.0),
           Consumer<OutputModel>(
             builder: (context, model, child) {
-              return FloatingActionButton(
+              return RaisedButton(
                 onPressed: () async {
                   DateTime now = DateTime.now();
                   DateTime yearToDay = DateTime(now.year, now.month, now.day);
@@ -211,14 +207,39 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                     await model.fetchEvents();
                   }
                 },
-                child: Icon(Icons.book),
+                child: Text('習慣達成ボタン'),
+                color: Colors.red[200],
+                highlightElevation: 16,
+                highlightColor: Colors.red,
+                onHighlightChanged: (value) {},
               );
             },
           ),
           SizedBox(height: 16.0),
           Center(
-            child: Text('↓習慣実績削除ボタン↓'),
+            child: Text('↓当日に限り習慣達成を訂正できます↓'),
           ),
+          SizedBox(height: 16.0),
+          Consumer<OutputModel>(builder: (context, model, child) {
+            return RaisedButton(
+              child: Text('習慣削除ボタン'),
+              onPressed: () async {
+                DateTime now = DateTime.now();
+                DateTime yearToDay = DateTime(now.year, now.month, now.day);
+                if (events.containsKey(yearToDay)) {
+                  events.remove(yearToDay);
+                  await deleteEvent(model, context);
+                  await model.fetchEvents();
+                } else {
+                  await noFoundedEvent(context);
+                }
+              },
+              color: Colors.red[200],
+              highlightElevation: 16,
+              highlightColor: Colors.red,
+              onHighlightChanged: (value) {},
+            );
+          }),
         ],
       ),
     );
@@ -245,12 +266,51 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     );
   }
 
+  Future deleteEvent(OutputModel model, BuildContext context) async {
+    await model.deleteBook();
+    await showDialog<void>(
+      context: context, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('本日の読書習慣を削除しました！'),
+          actions: <Widget>[
+            FlatButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future existEvent(BuildContext context) async {
     await showDialog<void>(
       context: context, // user must tap button!
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('本日は既に習慣達成済です！'),
+          actions: <Widget>[
+            FlatButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future noFoundedEvent(BuildContext context) async {
+    await showDialog<void>(
+      context: context, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('本日は読書をしていません。ぜひ１ページでも良いので読んでください。'),
           actions: <Widget>[
             FlatButton(
               child: Text('OK'),

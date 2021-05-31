@@ -9,25 +9,30 @@ class OutputModel extends ChangeNotifier {
   String userEmail;
   List<String> dateTimeList;
   List<String> userEmailList;
+  List<String> idList;
 
   Future fetchEvents() async {
+    eventList = {};
     final docs = await FirebaseFirestore.instance.collection('events').get();
     final events = docs.docs.map((doc) => UserData(doc)).toList();
     this.events = events;
     dateTimeList = events.map((event) => event.eventTime).toList();
     userEmailList = events.map((event) => event.userEmail).toList();
+    idList = events.map((event) => event.documentID).toList();
 
-    print(dateTimeList.length); //todo リスト数確認
-    print(userEmailList.length);
+    print('dateTimeList:${dateTimeList.length}'); //todo リスト数確認
+    print('userEmailList:${userEmailList.length}');
+    print('idList:${idList.length}');
 
     for (int i = 0; i < dateTimeList.length; i++) {
       if (userEmailList[i] == userEmail) {
-        // DateTime dateTime = DateTime.parse(dateTimeList[i]);
-        // this.eventList[dateTime] = [userEmailList[i]];//todo ここへんじゃね？
-        this.eventList[DateTime.parse(dateTimeList[i])] = [userEmailList[i]];
+        this.eventList[DateTime.parse(dateTimeList[i])] = [
+          userEmailList[i],
+          idList[i]
+        ];
       }
     }
-    print(eventList.length);
+    print('eventList:${eventList.length}');
     notifyListeners();
   }
 
@@ -43,13 +48,11 @@ class OutputModel extends ChangeNotifier {
     );
   }
 
-  Future deleteBook(UserData userdata) async {
+  Future deleteBook() async {
     DateTime currentTime = DateTime.now();
     DateTime yearToDay =
         DateTime(currentTime.year, currentTime.month, currentTime.day);
-    await FirebaseFirestore.instance
-        .collection('events')
-        .doc(userdata.eventTime)
-        .delete();
+    String todayId = eventList[yearToDay][1];
+    await FirebaseFirestore.instance.collection('events').doc(todayId).delete();
   }
 }
